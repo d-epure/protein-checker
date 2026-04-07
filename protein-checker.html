@@ -575,6 +575,146 @@
   }
 
   .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Tab navigation */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+
+  .tab-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active { background: var(--accent); color: #0f1a10; }
+
+  /* History */
+  .history-search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .history-search:focus { border-color: var(--accent); }
+  .history-search::placeholder { color: var(--muted); opacity: 0.6; }
+
+  .history-empty {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .history-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:hover { border-color: var(--accent); }
+
+  .history-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+
+  .history-meal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .history-score {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .history-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  .history-amino-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .history-pill {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .history-pill.present { background: rgba(126,203,131,0.15); color: var(--accent); }
+  .history-pill.low { background: rgba(232,184,109,0.15); color: var(--warn); }
+  .history-pill.missing { background: rgba(232,125,125,0.15); color: var(--danger); }
+
+  .history-suggestions {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  .history-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  .history-delete:hover { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -608,6 +748,14 @@
     <button class="change-key-btn" onclick="changeKey()" id="t-changekey">Change API key</button>
   </div>
 
+  <!-- Tab navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab-analyze" onclick="switchTab('analyze')" data-en="Analyze" data-ro="Analizează">Analyze</button>
+    <button class="tab-btn" id="tab-history" onclick="switchTab('history')" data-en="History" data-ro="Istoric">History</button>
+  </div>
+
+  <!-- Analyze tab -->
+  <div id="pane-analyze">
   <header>
     <div class="eyebrow" id="t-eyebrow"></div>
     <h1 id="t-h1"></h1>
@@ -669,6 +817,14 @@
     <div class="notes-card" id="notes-card"></div>
     <button class="reset-btn" id="reset-btn" onclick="reset()"></button>
   </div>
+  </div><!-- /pane-analyze -->
+
+  <!-- History tab -->
+  <div id="pane-history" style="display:none">
+    <input class="history-search" id="history-search" placeholder="Search meals or ingredients…" oninput="renderHistory()" />
+    <div id="history-list" class="history-list"></div>
+  </div>
+
 </div>
 
 <script>
@@ -719,16 +875,12 @@
 
   let lang = 'en', mode = 'describe', tags = [];
 
+  const ANTHROPIC_KEY = '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';
+
   function init() {
-    const key = localStorage.getItem('anthropic_key');
-    if (key) {
-      document.getElementById('setup-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'block';
-      setLang('en');
-    } else {
-      document.getElementById('setup-screen').style.display = 'flex';
-      document.getElementById('main-app').style.display = 'none';
-    }
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    setLang('en');
   }
 
   function saveKey() {
@@ -835,7 +987,7 @@
     results.classList.remove('show');
     loading.classList.add('show');
 
-    const apiKey = localStorage.getItem('anthropic_key');
+    const apiKey = ANTHROPIC_KEY;
     const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
 
 Meal: "${mealDescription}"
@@ -929,7 +1081,101 @@ Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ── History ──────────────────────────────────────────────
+  const HISTORY_KEY = 'protein_history_v1';
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  function saveHistory(h) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  }
+
+  function addToHistory(meal, data) {
+    const h = loadHistory();
+    h.unshift({
+      id: Date.now(),
+      date: new Date().toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      meal: meal,
+      score: data.score,
+      scoreLabel: data.scoreLabel,
+      aminoAcids: data.aminoAcids,
+      suggestions: data.suggestions || []
+    });
+    saveHistory(h.slice(0, 100)); // keep last 100
+  }
+
+  function deleteHistoryItem(id, e) {
+    e.stopPropagation();
+    const h = loadHistory().filter(x => x.id !== id);
+    saveHistory(h);
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const query = (document.getElementById('history-search').value || '').toLowerCase();
+    const h = loadHistory().filter(x =>
+      !query || x.meal.toLowerCase().includes(query)
+    );
+    const list = document.getElementById('history-list');
+
+    if (!h.length) {
+      list.innerHTML = `<div class="history-empty">${query ? 'No results found.' : 'No analyses yet. Run your first one!'}</div>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    h.forEach(item => {
+      const scoreColor = item.score >= 80 ? 'var(--accent)' : item.score >= 50 ? 'var(--warn)' : 'var(--danger)';
+      const aminoPills = (item.aminoAcids || []).map(aa =>
+        `<span class="history-pill ${aa.status}" title="${aa.note || ''}">${aa.name}</span>`
+      ).join('');
+      const sugText = (item.suggestions || []).map(s => `${s.emoji} ${s.food}`).join(' · ');
+
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      el.innerHTML = `
+        <div class="history-item-top">
+          <div class="history-meal">${item.meal}</div>
+          <div class="history-score" style="color:${scoreColor}">${item.score}%</div>
+          <button class="history-delete" onclick="deleteHistoryItem(${item.id}, event)" title="Delete">×</button>
+        </div>
+        <div class="history-date">${item.date} · ${item.scoreLabel}</div>
+        <div class="history-amino-row">${aminoPills}</div>
+        ${sugText ? `<div class="history-suggestions">Add: ${sugText}</div>` : ''}
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-analyze').classList.toggle('active', tab === 'analyze');
+    document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+    document.getElementById('pane-analyze').style.display = tab === 'analyze' ? 'block' : 'none';
+    document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none';
+    if (tab === 'history') {
+      document.getElementById('history-search').value = '';
+      renderHistory();
+      // update search placeholder for lang
+      document.getElementById('history-search').placeholder = lang === 'ro' ? 'Caută mese sau ingrediente…' : 'Search meals or ingredients…';
+    }
+  }
+
+  // ── Patch renderResults to also save to history ───────────
+  const _origRenderResults = renderResults;
+  renderResults = function(data) {
+    _origRenderResults(data);
+    // get the meal description that was analyzed
+    const meal = mode === 'describe'
+      ? document.getElementById('meal-desc').value.trim()
+      : tags.join(', ');
+    addToHistory(meal, data);
+  };
+
   init();
+
 </script>
 </body>
 </html>
