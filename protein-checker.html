@@ -585,14 +585,14 @@
     <h2>Welcome to ProteinComplete</h2>
     <p>This app needs a free Gemini API key to analyze your meals. It's saved only in your browser — never sent anywhere except directly to Google.</p>
     <div class="setup-steps">
-      <strong>Get your free key in 2 minutes:</strong><br>
-      1. Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a><br>
-      2. Sign in with your Google account<br>
-      3. Click <strong>Get API key</strong> → <strong>Create API key</strong><br>
-      4. Copy and paste it below
+      <strong>Where to find your key:</strong><br>
+      1. Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      2. Click <strong>API Keys</strong> in the left sidebar<br>
+      3. Copy your existing key or create a new one<br>
+      4. Paste it below
     </div>
-    <input class="setup-input" type="password" id="api-key-input" placeholder="AIza..." />
-    <div class="setup-error" id="setup-error">Please enter a valid Gemini API key (starts with AIza)</div>
+    <input class="setup-input" type="password" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="setup-error" id="setup-error">Please enter a valid Anthropic API key (starts with sk-ant-)</div>
     <button class="setup-btn" onclick="saveKey()">Save & Continue</button>
   </div>
 </div>
@@ -720,7 +720,7 @@
   let lang = 'en', mode = 'describe', tags = [];
 
   function init() {
-    const key = localStorage.getItem('gemini_key');
+    const key = localStorage.getItem('anthropic_key');
     if (key) {
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
@@ -733,18 +733,18 @@
 
   function saveKey() {
     const val = document.getElementById('api-key-input').value.trim();
-    if (!val.startsWith('AIza')) {
+    if (!val.startsWith('sk-ant-')) {
       document.getElementById('setup-error').classList.add('show');
       return;
     }
-    localStorage.setItem('gemini_key', val);
+    localStorage.setItem('anthropic_key', val);
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     setLang('en');
   }
 
   function changeKey() {
-    localStorage.removeItem('gemini_key');
+    localStorage.removeItem('anthropic_key');
     document.getElementById('api-key-input').value = '';
     document.getElementById('setup-error').classList.remove('show');
     document.getElementById('setup-screen').style.display = 'flex';
@@ -835,7 +835,7 @@
     results.classList.remove('show');
     loading.classList.add('show');
 
-    const apiKey = localStorage.getItem('gemini_key');
+    const apiKey = localStorage.getItem('anthropic_key');
     const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
 
 Meal: "${mealDescription}"
@@ -846,21 +846,24 @@ Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
 {"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English name>","status":"present|low|missing","note":"<brief note>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences practical advice>"}`;
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 1000 }
-          })
-        }
-      );
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
 
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
-      const text = data.candidates[0].content.parts[0].text;
+      const text = data.content.map(c => c.text || '').join('');
       const clean = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
       renderResults(parsed);
