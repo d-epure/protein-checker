@@ -485,15 +485,22 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .amino-item:hover { filter: brightness(1.08); }
+  .amino-item.present { border-color: rgba(126,203,131,0.4); }
+  .amino-item.missing { border-color: rgba(232,125,125,0.4); }
+  .amino-item.low { border-color: rgba(232,184,109,0.4); }
+
+  .amino-header {
     padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
   }
-
-  .amino-item.present { border-color: rgba(126,203,131,0.4); }
-  .amino-item.missing { border-color: rgba(232,125,125,0.4); }
-  .amino-item.low { border-color: rgba(232,184,109,0.4); }
 
   .amino-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .amino-item.present .amino-dot { background: var(--accent); }
@@ -501,6 +508,8 @@
   .amino-item.low .amino-dot { background: var(--warn); }
 
   .amino-name { font-size: 13px; font-weight: 500; flex: 1; }
+
+  .amino-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 
   .amino-status {
     font-family: 'DM Mono', monospace;
@@ -512,6 +521,79 @@
   .amino-item.present .amino-status { color: var(--accent); }
   .amino-item.missing .amino-status { color: var(--danger); }
   .amino-item.low .amino-status { color: var(--warn); }
+
+  .amino-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .amino-item.present .amino-pct { color: var(--accent); }
+  .amino-item.missing .amino-pct { color: var(--danger); }
+  .amino-item.low .amino-pct { color: var(--warn); }
+
+  .amino-chevron {
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform 0.25s;
+    margin-left: 4px;
+  }
+
+  .amino-item.expanded .amino-chevron { transform: rotate(180deg); }
+
+  .amino-detail {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+  }
+
+  .amino-item.expanded .amino-detail { display: block; }
+
+  .amino-detail-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    padding-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .amino-detail-section {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 10px;
+  }
+
+  .amino-foods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .amino-food-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .amino-intake {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    background: var(--surface2);
+    border-radius: 7px;
+    padding: 8px 10px;
+  }
 
   .suggestions-card {
     background: var(--surface);
@@ -875,6 +957,7 @@
 
   let lang = 'en', mode = 'describe', tags = [];
 
+  const ANTHROPIC_KEY = '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';
 
   function init() {
     document.getElementById('setup-screen').style.display = 'none';
@@ -986,7 +1069,7 @@
     results.classList.remove('show');
     loading.classList.add('show');
 
-    const apiKey = localStorage.getItem('anthropic_key');
+    const apiKey = ANTHROPIC_KEY;
     const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
 
 Meal: "${mealDescription}"
@@ -1043,10 +1126,26 @@ Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
     const grid = document.getElementById('amino-grid');
     grid.innerHTML = '';
     (data.aminoAcids || []).forEach(aa => {
+      const pct = aa.percentage != null ? aa.percentage : (aa.status === 'present' ? 80 : aa.status === 'low' ? 35 : 5);
+      const foods = (aa.richFoods || []).map(f => `<span class="amino-food-tag">${f}</span>`).join('');
       const div = document.createElement('div');
       div.className = `amino-item ${aa.status}`;
-      div.title = aa.note || '';
-      div.innerHTML = `<div class="amino-dot"></div><div class="amino-name">${aa.name}</div><div class="amino-status">${sl[aa.status] || aa.status}</div>`;
+      div.innerHTML = `
+        <div class="amino-header" onclick="toggleAmino(this.parentElement)">
+          <div class="amino-dot"></div>
+          <div class="amino-name">${aa.name}</div>
+          <div class="amino-right">
+            <div class="amino-pct">${pct}%</div>
+            <div class="amino-status">${sl[aa.status] || aa.status}</div>
+          </div>
+          <div class="amino-chevron">▼</div>
+        </div>
+        <div class="amino-detail">
+          <div class="amino-detail-note">${aa.note || ''}</div>
+          ${foods ? `<div class="amino-detail-section">Rich sources</div><div class="amino-foods">${foods}</div>` : ''}
+          ${aa.intakeAdvice ? `<div class="amino-detail-section">What to add</div><div class="amino-intake">${aa.intakeAdvice}</div>` : ''}
+        </div>
+      `;
       grid.appendChild(div);
     });
 
@@ -1078,6 +1177,10 @@ Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
     document.getElementById('meal-desc').value = '';
     tags = []; renderTags();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleAmino(el) {
+    el.classList.toggle('expanded');
   }
 
   // ── History ──────────────────────────────────────────────
