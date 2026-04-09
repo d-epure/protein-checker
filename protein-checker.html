@@ -1075,9 +1075,14 @@ Meal: "${mealDescription}"
 
 Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as: "present", "low", or "missing". All other text in ${t.promptLang}.
 
-IMPORTANT: For EVERY amino acid you MUST populate ALL fields: name, status, percentage, note, richFoods (exactly 3 items), intakeAdvice. No empty arrays. No missing fields.
+CRITICAL RULES:
+1. Return ONLY a single valid JSON object. No markdown, no backticks, no explanation before or after.
+2. Every string value must use properly escaped JSON. Never use unescaped double quotes inside string values.
+3. For EVERY amino acid include ALL fields: name, status, percentage, note, richFoods, intakeAdvice.
+4. richFoods must be an array of exactly 3 food name strings.
+5. Do not truncate the response. Complete all 9 amino acids.
 
-Respond ONLY with valid JSON, no markdown, no backticks:
+JSON structure:
 {"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English>","status":"present|low|missing","percentage":<int 0-100>,"note":"<1 sentence>","richFoods":["<food1>","<food2>","<food3>"],"intakeAdvice":"<1 sentence>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences>"}`;
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1098,8 +1103,12 @@ Respond ONLY with valid JSON, no markdown, no backticks:
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const text = data.content.map(c => c.text || '').join('');
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
+      // Extract JSON robustly — find first { and last }
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace === -1 || lastBrace === -1) throw new Error('No JSON found in response');
+      const jsonStr = text.slice(firstBrace, lastBrace + 1);
+      const parsed = JSON.parse(jsonStr);
       renderResults(parsed);
     } catch(err) {
       showError(t.errorGeneric);
