@@ -993,14 +993,7 @@
     loading.classList.add('show');
 
     const apiKey = localStorage.getItem('anthropic_key');
-    const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
-
-Meal: "${mealDescription}"
-
-Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as: "present", "low", or "missing". All other text in ${t.promptLang}.
-
-Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
-{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English name>","status":"present|low|missing","note":"<brief note>"}],"suggestions":[{"emoji":"<emoji>","food":"<food name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences practical advice>"}` ;
+    const prompt = `Nutrition expert. Does this meal cover all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine)? Meal: "${mealDescription}". Respond in ${t.promptLang}. Name in English. Status must be exactly "present", "low", or "missing". Reply ONLY with JSON, no markdown: {"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English>","status":"present|low|missing","note":"<brief note>"}],"suggestions":[{"emoji":"<e>","food":"<f>","reason":"<1 sentence>"}],"notes":"<1-2 sentences>"}`;
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
