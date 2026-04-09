@@ -1073,11 +1073,12 @@
 
 Meal: "${mealDescription}"
 
-Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as one of: "present", "low", "missing". All other text in ${t.promptLang}.
+Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as: "present", "low", or "missing". All other text in ${t.promptLang}.
 
-Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
-{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English name>","status":"present|low|missing","note":"<brief note>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences practical advice>"}`;
+IMPORTANT: For EVERY amino acid you MUST populate ALL fields: name, status, percentage, note, richFoods (exactly 3 items), intakeAdvice. No empty arrays. No missing fields.
 
+Respond ONLY with valid JSON, no markdown, no backticks:
+{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English>","status":"present|low|missing","percentage":<int 0-100>,"note":"<1 sentence>","richFoods":["<food1>","<food2>","<food3>"],"intakeAdvice":"<1 sentence>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences>"}`;
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
