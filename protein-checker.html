@@ -957,7 +957,6 @@
 
   let lang = 'en', mode = 'describe', tags = [];
 
-  const ANTHROPIC_KEY = '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';
 
   function init() {
     document.getElementById('setup-screen').style.display = 'none';
@@ -1069,7 +1068,7 @@
     results.classList.remove('show');
     loading.classList.add('show');
 
-    const apiKey = ANTHROPIC_KEY;
+    const apiKey = localStorage.getItem('anthropic_key');
     const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
 
 Meal: "${mealDescription}"
