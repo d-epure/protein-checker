@@ -1095,7 +1095,7 @@ JSON structure:
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
+          max_tokens: 2000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -1107,8 +1107,17 @@ JSON structure:
       const firstBrace = text.indexOf('{');
       const lastBrace = text.lastIndexOf('}');
       if (firstBrace === -1 || lastBrace === -1) throw new Error('No JSON found in response');
-      const jsonStr = text.slice(firstBrace, lastBrace + 1);
-      const parsed = JSON.parse(jsonStr);
+      let jsonStr = text.slice(firstBrace, lastBrace + 1);
+      // Clean up the JSON string
+      jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch(e) {
+        // Try to salvage by being more aggressive about cleaning
+        jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1'); // trailing commas
+        parsed = JSON.parse(jsonStr);
+      }
       renderResults(parsed);
     } catch(err) {
       showError(t.errorGeneric);
