@@ -485,22 +485,15 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-
-  .amino-item:hover { filter: brightness(1.08); }
-  .amino-item.present { border-color: rgba(126,203,131,0.4); }
-  .amino-item.missing { border-color: rgba(232,125,125,0.4); }
-  .amino-item.low { border-color: rgba(232,184,109,0.4); }
-
-  .amino-header {
     padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
   }
+
+  .amino-item.present { border-color: rgba(126,203,131,0.4); }
+  .amino-item.missing { border-color: rgba(232,125,125,0.4); }
+  .amino-item.low { border-color: rgba(232,184,109,0.4); }
 
   .amino-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .amino-item.present .amino-dot { background: var(--accent); }
@@ -510,6 +503,16 @@
   .amino-name { font-size: 13px; font-weight: 500; flex: 1; }
 
   .amino-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+  .amino-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .amino-item.present .amino-pct { color: var(--accent); }
+  .amino-item.missing .amino-pct { color: var(--danger); }
+  .amino-item.low .amino-pct { color: var(--warn); }
 
   .amino-status {
     font-family: 'DM Mono', monospace;
@@ -522,80 +525,7 @@
   .amino-item.missing .amino-status { color: var(--danger); }
   .amino-item.low .amino-status { color: var(--warn); }
 
-  .amino-pct {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .amino-item.present .amino-pct { color: var(--accent); }
-  .amino-item.missing .amino-pct { color: var(--danger); }
-  .amino-item.low .amino-pct { color: var(--warn); }
-
-  .amino-chevron {
-    font-size: 10px;
-    color: var(--muted);
-    transition: transform 0.25s;
-    margin-left: 4px;
-  }
-
-  .amino-item.expanded .amino-chevron { transform: rotate(180deg); }
-
-  .amino-detail {
-    display: none;
-    padding: 0 14px 14px;
-    border-top: 1px solid var(--border);
-    margin-top: 0;
-  }
-
-  .amino-item.expanded .amino-detail { display: block; }
-
-  .amino-detail-note {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 300;
-    line-height: 1.6;
-    padding-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  .amino-detail-section {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    margin-top: 10px;
-  }
-
-  .amino-foods {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 8px;
-  }
-
-  .amino-food-tag {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 3px 10px;
-    font-size: 11px;
-    color: var(--text);
-  }
-
-  .amino-intake {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 300;
-    line-height: 1.6;
-    background: var(--surface2);
-    border-radius: 7px;
-    padding: 8px 10px;
-  }
-
-  .suggestions-card {
+    .suggestions-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -957,6 +887,7 @@
 
   let lang = 'en', mode = 'describe', tags = [];
 
+  const ANTHROPIC_KEY = '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';
 
   function init() {
     document.getElementById('setup-screen').style.display = 'none';
@@ -1068,22 +999,15 @@
     results.classList.remove('show');
     loading.classList.add('show');
 
-    const apiKey = localStorage.getItem('anthropic_key');
+    const apiKey = ANTHROPIC_KEY;
     const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
 
 Meal: "${mealDescription}"
 
 Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as: "present", "low", or "missing". All other text in ${t.promptLang}.
 
-CRITICAL RULES:
-1. Return ONLY a single valid JSON object. No markdown, no backticks, no explanation before or after.
-2. Every string value must use properly escaped JSON. Never use unescaped double quotes inside string values.
-3. For EVERY amino acid include ALL fields: name, status, percentage, note, richFoods, intakeAdvice.
-4. richFoods must be an array of exactly 3 food name strings.
-5. Do not truncate the response. Complete all 9 amino acids.
-
-JSON structure:
-{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English>","status":"present|low|missing","percentage":<int 0-100>,"note":"<1 sentence>","richFoods":["<food1>","<food2>","<food3>"],"intakeAdvice":"<1 sentence>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences>"}`;
+Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
+{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English name>","status":"present|low|missing","percentage":<integer 0-100>,"note":"<brief note>"}],"suggestions":[{"emoji":"<emoji>","food":"<food name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences practical advice>"}` ;
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -1094,8 +1018,8 @@ JSON structure:
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -1103,22 +1027,9 @@ JSON structure:
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const text = data.content.map(c => c.text || '').join('');
-      // Extract JSON robustly — find first { and last }
-      const firstBrace = text.indexOf('{');
-      const lastBrace = text.lastIndexOf('}');
-      if (firstBrace === -1 || lastBrace === -1) throw new Error('No JSON found in response');
-      let jsonStr = text.slice(firstBrace, lastBrace + 1);
-      // Clean up the JSON string
-      jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-      let parsed;
-      try {
-        parsed = JSON.parse(jsonStr);
-      } catch(e) {
-        // Try to salvage by being more aggressive about cleaning
-        jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1'); // trailing commas
-        parsed = JSON.parse(jsonStr);
-      }
-      renderResults(parsed);
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+      renderResults(parsed);;
     } catch(err) {
       showError(t.errorGeneric);
       console.error(err);
@@ -1145,29 +1056,21 @@ JSON structure:
     grid.innerHTML = '';
     (data.aminoAcids || []).forEach(aa => {
       const pct = aa.percentage != null ? aa.percentage : (aa.status === 'present' ? 80 : aa.status === 'low' ? 35 : 5);
-      const foods = (aa.richFoods || []).map(f => `<span class="amino-food-tag">${f}</span>`).join('');
       const div = document.createElement('div');
       div.className = `amino-item ${aa.status}`;
+      div.title = aa.note || '';
       div.innerHTML = `
-        <div class="amino-header" onclick="toggleAmino(this.parentElement)">
-          <div class="amino-dot"></div>
-          <div class="amino-name">${aa.name}</div>
-          <div class="amino-right">
-            <div class="amino-pct">${pct}%</div>
-            <div class="amino-status">${sl[aa.status] || aa.status}</div>
-          </div>
-          <div class="amino-chevron">▼</div>
-        </div>
-        <div class="amino-detail">
-          <div class="amino-detail-note">${aa.note || ''}</div>
-          ${foods ? `<div class="amino-detail-section">Rich sources</div><div class="amino-foods">${foods}</div>` : ''}
-          ${aa.intakeAdvice ? `<div class="amino-detail-section">What to add</div><div class="amino-intake">${aa.intakeAdvice}</div>` : ''}
+        <div class="amino-dot"></div>
+        <div class="amino-name">${aa.name}</div>
+        <div class="amino-right">
+          <div class="amino-pct">${pct}%</div>
+          <div class="amino-status">${sl[aa.status] || aa.status}</div>
         </div>
       `;
       grid.appendChild(div);
     });
 
-    const sugCard = document.getElementById('suggestions-card');
+        const sugCard = document.getElementById('suggestions-card');
     const sugList = document.getElementById('suggestion-list');
     sugList.innerHTML = '';
     if (data.suggestions && data.suggestions.length) {
@@ -1195,10 +1098,6 @@ JSON structure:
     document.getElementById('meal-desc').value = '';
     tags = []; renderTags();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function toggleAmino(el) {
-    el.classList.toggle('expanded');
   }
 
   // ── History ──────────────────────────────────────────────
