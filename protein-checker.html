@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProteinComplete</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1a10;
+    --surface: #162018;
+    --surface2: #1e2d20;
+    --border: #2a3e2c;
+    --accent: #7ecb83;
+    --accent2: #b5e8b8;
+    --warn: #e8b86d;
+    --danger: #e87d7d;
+    --text: #e8f0e9;
+    --muted: #8ca08e;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(126,203,131,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 10% 80%, rgba(126,203,131,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+  }
+
+  .setup-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .setup-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .setup-card p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+
+  .setup-card a { color: var(--accent); }
+
+  .setup-steps {
+    background: var(--surface2);
+    border-radius: 9px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 2;
+    font-weight: 300;
+  }
+
+  .setup-steps strong { color: var(--text); font-weight: 500; }
+
+  .setup-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .setup-input:focus { border-color: var(--accent); }
+  .setup-input::placeholder { color: var(--muted); opacity: 0.5; }
+
+  .setup-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #0f1a10;
+    border: none;
+    border-radius: 9px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .setup-btn:hover { background: var(--accent2); }
+
+  .setup-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 8px;
+    display: none;
+  }
+
+  .setup-error.show { display: block; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .lang-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .lang-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .lang-btn.active { background: var(--accent); color: #0f1a10; font-weight: 500; }
+
+  .change-key-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.2s;
+  }
+
+  .change-key-btn:hover { color: var(--accent); }
+
+  header { margin-bottom: 40px; }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  h1 em { color: var(--accent); font-style: italic; }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 480px;
+    font-weight: 300;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+
+  .mode-btn {
+    padding: 8px 18px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active { background: var(--accent); color: #0f1a10; }
+
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .input-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+  .tag-input-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    transition: border-color 0.2s;
+    min-height: 50px;
+    cursor: text;
+  }
+
+  .tag-input-wrap:focus-within { border-color: var(--accent); }
+
+  .tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 9px 3px 12px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: tagIn 0.15s ease;
+  }
+
+  @keyframes tagIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .tag button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+  }
+
+  .tag button:hover { color: var(--danger); }
+
+  .tag-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    flex: 1;
+    min-width: 100px;
+    padding: 3px 0;
+  }
+
+  .tag-input::placeholder { color: var(--muted); opacity: 0.6; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 7px; font-weight: 300; }
+
+  .analyze-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: #0f1a10;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .analyze-btn:hover:not(:disabled) {
+    background: var(--accent2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(126,203,131,0.2);
+  }
+
+  .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .loading.show { display: block; }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { display: none; animation: fadeUp 0.4s ease; margin-top: 28px; }
+  .results.show { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .results-divider span {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .results-divider::before, .results-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .score-ring {
+    flex-shrink: 0;
+    position: relative;
+    width: 84px;
+    height: 84px;
+  }
+
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring circle { fill: none; stroke-width: 6; stroke-linecap: round; }
+  .score-ring .bg-circle { stroke: var(--surface2); }
+  .score-ring .fg-circle { stroke: var(--accent); transition: stroke-dashoffset 1s ease; }
+
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  .score-info h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 5px; }
+  .score-info p { color: var(--muted); font-size: 13px; font-weight: 300; line-height: 1.5; }
+
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .amino-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .amino-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .amino-item.present { border-color: rgba(126,203,131,0.4); }
+  .amino-item.missing { border-color: rgba(232,125,125,0.4); }
+  .amino-item.low { border-color: rgba(232,184,109,0.4); }
+
+  .amino-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .amino-item.present .amino-dot { background: var(--accent); }
+  .amino-item.missing .amino-dot { background: var(--danger); }
+  .amino-item.low .amino-dot { background: var(--warn); }
+
+  .amino-name { font-size: 13px; font-weight: 500; flex: 1; }
+
+  .amino-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .amino-item.present .amino-status { color: var(--accent); }
+  .amino-item.missing .amino-status { color: var(--danger); }
+  .amino-item.low .amino-status { color: var(--warn); }
+
+  .suggestions-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .suggestion-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .suggestion-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .suggestion-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .suggestion-body h4 { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .suggestion-body p { font-size: 12px; color: var(--muted); font-weight: 300; line-height: 1.5; }
+
+  .notes-card {
+    background: var(--surface);
+    border: 1px solid rgba(126,203,131,0.2);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .error-msg {
+    display: none;
+    background: rgba(232,125,125,0.08);
+    border: 1px solid rgba(232,125,125,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--danger);
+    margin-bottom: 16px;
+  }
+
+  .error-msg.show { display: block; }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Tab navigation */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+
+  .tab-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active { background: var(--accent); color: #0f1a10; }
+
+  /* History */
+  .history-search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .history-search:focus { border-color: var(--accent); }
+  .history-search::placeholder { color: var(--muted); opacity: 0.6; }
+
+  .history-empty {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .history-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:hover { border-color: var(--accent); }
+
+  .history-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+
+  .history-meal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .history-score {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .history-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  .history-amino-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .history-pill {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .history-pill.present { background: rgba(126,203,131,0.15); color: var(--accent); }
+  .history-pill.low { background: rgba(232,184,109,0.15); color: var(--warn); }
+  .history-pill.missing { background: rgba(232,125,125,0.15); color: var(--danger); }
+
+  .history-suggestions {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  .history-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  .history-delete:hover { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="setup-screen" style="display:none">
+  <div class="setup-card">
+    <h2>Welcome to ProteinComplete</h2>
+    <p>This app needs your Anthropic API key to analyze your meals. It's saved only in your browser — never sent anywhere except directly to Anthropic.</p>
+    <div class="setup-steps">
+      <strong>Where to find your key:</strong><br>
+      1. Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      2. Click <strong>API Keys</strong> in the left sidebar<br>
+      3. Copy your existing key or create a new one<br>
+      4. Paste it below
+    </div>
+    <input class="setup-input" type="password" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="setup-error" id="setup-error">Please enter a valid Anthropic API key (starts with sk-ant-)</div>
+    <button class="setup-btn" onclick="saveKey()">Save & Continue</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="container" style="display:none">
+
+  <div class="topbar">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ro')">RO</button>
+    </div>
+    <button class="change-key-btn" onclick="changeKey()" id="t-changekey">Change API key</button>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab-analyze" onclick="switchTab('analyze')" data-en="Analyze" data-ro="Analizează">Analyze</button>
+    <button class="tab-btn" id="tab-history" onclick="switchTab('history')" data-en="History" data-ro="Istoric">History</button>
+  </div>
+
+  <!-- Analyze tab -->
+  <div id="pane-analyze">
+  <header>
+    <div class="eyebrow" id="t-eyebrow"></div>
+    <h1 id="t-h1"></h1>
+    <p class="subtitle" id="t-subtitle"></p>
+  </header>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-describe" onclick="setMode('describe')"></button>
+    <button class="mode-btn" id="btn-ingredients" onclick="setMode('ingredients')"></button>
+  </div>
+
+  <div class="input-card">
+    <div id="describe-mode">
+      <div class="input-label" id="t-label-describe"></div>
+      <textarea id="meal-desc"></textarea>
+    </div>
+    <div id="ingredients-mode" style="display:none">
+      <div class="input-label" id="t-label-ingredients"></div>
+      <div class="tag-input-wrap" id="tag-wrap" onclick="document.getElementById('tag-input').focus()">
+        <input class="tag-input" id="tag-input" />
+      </div>
+      <p class="hint" id="t-hint"></p>
+    </div>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <button class="analyze-btn" id="analyze-btn" onclick="analyze()">
+    <span id="t-analyze-btn"></span>
+  </button>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span id="t-loading"></span>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-divider"><span id="t-analysis"></span></div>
+    <div class="score-card">
+      <div class="score-ring">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle class="bg-circle" cx="42" cy="42" r="36" />
+          <circle class="fg-circle" id="score-arc" cx="42" cy="42" r="36"
+            stroke-dasharray="226" stroke-dashoffset="226" />
+        </svg>
+        <div class="score-number" id="score-number">—</div>
+      </div>
+      <div class="score-info">
+        <h3 id="score-label">—</h3>
+        <p id="score-desc">—</p>
+      </div>
+    </div>
+    <div class="section-title" id="t-amino-title"></div>
+    <div class="amino-grid" id="amino-grid"></div>
+    <div class="suggestions-card" id="suggestions-card" style="display:none">
+      <div class="section-title" id="t-suggestions-title"></div>
+      <div class="suggestion-list" id="suggestion-list"></div>
+    </div>
+    <div class="notes-card" id="notes-card"></div>
+    <button class="reset-btn" id="reset-btn" onclick="reset()"></button>
+  </div>
+  </div><!-- /pane-analyze -->
+
+  <!-- History tab -->
+  <div id="pane-history" style="display:none">
+    <input class="history-search" id="history-search" placeholder="Search meals or ingredients…" oninput="renderHistory()" />
+    <div id="history-list" class="history-list"></div>
+  </div>
+
+</div>
+
+<script>
+  const i18n = {
+    en: {
+      eyebrow: 'Protein Completeness',
+      h1: 'Are you getting <em>all 9?</em>',
+      subtitle: "Check whether your meal covers all 9 essential amino acids — and find out what to add if it doesn't.",
+      describeBtn: 'Describe meal', ingredientsBtn: 'List ingredients',
+      labelDescribe: 'Describe your meal', labelIngredients: 'Add ingredients',
+      placeholder: 'e.g. rice with black beans, almonds, roasted broccoli…',
+      tagPlaceholder: 'Type an ingredient, press Enter…',
+      hint: 'Press Enter or comma to add each ingredient.',
+      analyzeBtn: 'Analyze protein completeness',
+      loading: 'Checking your amino acid profile…',
+      analysis: 'Analysis', aminoTitle: 'Essential amino acids',
+      suggestionsTitle: 'To complete your protein',
+      resetBtn: '← Analyze another meal',
+      changeKey: 'Change API key',
+      errorDescribe: 'Please describe your meal first.',
+      errorIngredients: 'Please add at least one ingredient.',
+      errorGeneric: 'Something went wrong. Please check your API key and try again.',
+      promptLang: 'English',
+      statusLabels: { present: 'present', low: 'low', missing: 'missing' },
+    },
+    ro: {
+      eyebrow: 'Completitudine Proteică',
+      h1: 'Ai toți <em>cei 9?</em>',
+      subtitle: 'Verifică dacă masa ta conține toți cei 9 aminoacizi esențiali — și află ce poți adăuga dacă nu.',
+      describeBtn: 'Descrie masa', ingredientsBtn: 'Listă ingrediente',
+      labelDescribe: 'Descrie masa ta', labelIngredients: 'Adaugă ingrediente',
+      placeholder: 'ex. orez cu fasole neagră, migdale, broccoli la cuptor…',
+      tagPlaceholder: 'Scrie un ingredient, apasă Enter…',
+      hint: 'Apasă Enter sau virgulă pentru fiecare ingredient.',
+      analyzeBtn: 'Analizează proteinele',
+      loading: 'Se verifică profilul de aminoacizi…',
+      analysis: 'Analiză', aminoTitle: 'Aminoacizi esențiali',
+      suggestionsTitle: 'Pentru a completa proteina',
+      resetBtn: '← Analizează altă masă',
+      changeKey: 'Schimbă cheia API',
+      errorDescribe: 'Te rugăm să descrii mai întâi masa ta.',
+      errorIngredients: 'Te rugăm să adaugi cel puțin un ingredient.',
+      errorGeneric: 'Ceva a mers greșit. Verifică cheia API și încearcă din nou.',
+      promptLang: 'Romanian',
+      statusLabels: { present: 'prezent', low: 'scăzut', missing: 'lipsă' },
+    }
+  };
+
+  let lang = 'en', mode = 'describe', tags = [];
+
+
+  function init() {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    setLang('en');
+  }
+
+  function saveKey() {
+    const val = document.getElementById('api-key-input').value.trim();
+    if (!val.startsWith('sk-ant-')) {
+      document.getElementById('setup-error').classList.add('show');
+      return;
+    }
+    localStorage.setItem('anthropic_key', val);
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    setLang('en');
+  }
+
+  function changeKey() {
+    localStorage.removeItem('anthropic_key');
+    document.getElementById('api-key-input').value = '';
+    document.getElementById('setup-error').classList.remove('show');
+    document.getElementById('setup-screen').style.display = 'flex';
+    document.getElementById('main-app').style.display = 'none';
+  }
+
+  function setLang(l) {
+    lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.trim().toLowerCase() === l);
+    });
+    const t = i18n[l];
+    document.getElementById('t-eyebrow').textContent = t.eyebrow;
+    document.getElementById('t-h1').innerHTML = t.h1;
+    document.getElementById('t-subtitle').textContent = t.subtitle;
+    document.getElementById('btn-describe').textContent = t.describeBtn;
+    document.getElementById('btn-ingredients').textContent = t.ingredientsBtn;
+    document.getElementById('t-label-describe').textContent = t.labelDescribe;
+    document.getElementById('t-label-ingredients').textContent = t.labelIngredients;
+    document.getElementById('meal-desc').placeholder = t.placeholder;
+    document.getElementById('tag-input').placeholder = t.tagPlaceholder;
+    document.getElementById('t-hint').textContent = t.hint;
+    document.getElementById('t-analyze-btn').textContent = t.analyzeBtn;
+    document.getElementById('t-loading').textContent = t.loading;
+    document.getElementById('t-analysis').textContent = t.analysis;
+    document.getElementById('t-amino-title').textContent = t.aminoTitle;
+    document.getElementById('t-suggestions-title').textContent = t.suggestionsTitle;
+    document.getElementById('reset-btn').textContent = t.resetBtn;
+    document.getElementById('t-changekey').textContent = t.changeKey;
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-describe').classList.toggle('active', m === 'describe');
+    document.getElementById('btn-ingredients').classList.toggle('active', m === 'ingredients');
+    document.getElementById('describe-mode').style.display = m === 'describe' ? 'block' : 'none';
+    document.getElementById('ingredients-mode').style.display = m === 'ingredients' ? 'block' : 'none';
+  }
+
+  const tagInput = document.getElementById('tag-input');
+  tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput.value); }
+    else if (e.key === 'Backspace' && tagInput.value === '' && tags.length) { removeTag(tags.length - 1); }
+  });
+
+  function addTag(val) {
+    val = val.trim().replace(/,$/, '');
+    if (!val) return;
+    tags.push(val); renderTags(); tagInput.value = '';
+  }
+
+  function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+  function renderTags() {
+    document.querySelectorAll('.tag').forEach(t => t.remove());
+    const wrap = document.getElementById('tag-wrap');
+    tags.forEach((t, i) => {
+      const el = document.createElement('div');
+      el.className = 'tag';
+      el.innerHTML = `<span>${t}</span><button onclick="removeTag(${i})">×</button>`;
+      wrap.insertBefore(el, tagInput);
+    });
+  }
+
+  async function analyze() {
+    const t = i18n[lang];
+    const btn = document.getElementById('analyze-btn');
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
+    const errorEl = document.getElementById('error-msg');
+
+    let mealDescription = '';
+    if (mode === 'describe') {
+      mealDescription = document.getElementById('meal-desc').value.trim();
+    } else {
+      const pending = tagInput.value.trim();
+      if (pending) addTag(pending);
+      mealDescription = tags.join(', ');
+    }
+
+    if (!mealDescription) {
+      showError(mode === 'describe' ? t.errorDescribe : t.errorIngredients);
+      return;
+    }
+
+    errorEl.classList.remove('show');
+    btn.disabled = true;
+    results.classList.remove('show');
+    loading.classList.add('show');
+
+    const apiKey = localStorage.getItem('anthropic_key');
+    const prompt = `You are a nutrition expert. Analyze whether this meal covers all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine).
+
+Meal: "${mealDescription}"
+
+Respond in ${t.promptLang}. Keep amino acid "name" in English. Keep "status" exactly as one of: "present", "low", "missing". All other text in ${t.promptLang}.
+
+Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
+{"score":<0-100>,"scoreLabel":"<verdict>","scoreDesc":"<1-2 sentences>","aminoAcids":[{"name":"<English name>","status":"present|low|missing","note":"<brief note>"}],"suggestions":[{"emoji":"<emoji>","food":"<name>","reason":"<1 sentence>"}],"notes":"<1-2 sentences practical advice>"}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const text = data.content.map(c => c.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+      renderResults(parsed);
+    } catch(err) {
+      showError(t.errorGeneric);
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      loading.classList.remove('show');
+    }
+  }
+
+  function renderResults(data) {
+    const circ = 2 * Math.PI * 36;
+    const offset = circ - (data.score / 100) * circ;
+    const arc = document.getElementById('score-arc');
+    arc.style.strokeDashoffset = circ;
+    arc.style.stroke = data.score >= 80 ? 'var(--accent)' : data.score >= 50 ? 'var(--warn)' : 'var(--danger)';
+    setTimeout(() => { arc.style.strokeDashoffset = offset; }, 50);
+
+    document.getElementById('score-number').textContent = data.score + '%';
+    document.getElementById('score-label').textContent = data.scoreLabel;
+    document.getElementById('score-desc').textContent = data.scoreDesc;
+
+    const sl = i18n[lang].statusLabels;
+    const grid = document.getElementById('amino-grid');
+    grid.innerHTML = '';
+    (data.aminoAcids || []).forEach(aa => {
+      const div = document.createElement('div');
+      div.className = `amino-item ${aa.status}`;
+      div.title = aa.note || '';
+      div.innerHTML = `<div class="amino-dot"></div><div class="amino-name">${aa.name}</div><div class="amino-status">${sl[aa.status] || aa.status}</div>`;
+      grid.appendChild(div);
+    });
+
+    const sugCard = document.getElementById('suggestions-card');
+    const sugList = document.getElementById('suggestion-list');
+    sugList.innerHTML = '';
+    if (data.suggestions && data.suggestions.length) {
+      sugCard.style.display = 'block';
+      data.suggestions.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.innerHTML = `<div class="suggestion-icon">${s.emoji}</div><div class="suggestion-body"><h4>${s.food}</h4><p>${s.reason}</p></div>`;
+        sugList.appendChild(div);
+      });
+    } else { sugCard.style.display = 'none'; }
+
+    document.getElementById('notes-card').textContent = data.notes || '';
+    document.getElementById('results').classList.add('show');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg; el.classList.add('show');
+  }
+
+  function reset() {
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('meal-desc').value = '';
+    tags = []; renderTags();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── History ──────────────────────────────────────────────
+  const HISTORY_KEY = 'protein_history_v1';
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  function saveHistory(h) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  }
+
+  function addToHistory(meal, data) {
+    const h = loadHistory();
+    h.unshift({
+      id: Date.now(),
+      date: new Date().toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      meal: meal,
+      score: data.score,
+      scoreLabel: data.scoreLabel,
+      aminoAcids: data.aminoAcids,
+      suggestions: data.suggestions || []
+    });
+    saveHistory(h.slice(0, 100)); // keep last 100
+  }
+
+  function deleteHistoryItem(id, e) {
+    e.stopPropagation();
+    const h = loadHistory().filter(x => x.id !== id);
+    saveHistory(h);
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const query = (document.getElementById('history-search').value || '').toLowerCase();
+    const h = loadHistory().filter(x =>
+      !query || x.meal.toLowerCase().includes(query)
+    );
+    const list = document.getElementById('history-list');
+
+    if (!h.length) {
+      list.innerHTML = `<div class="history-empty">${query ? 'No results found.' : 'No analyses yet. Run your first one!'}</div>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    h.forEach(item => {
+      const scoreColor = item.score >= 80 ? 'var(--accent)' : item.score >= 50 ? 'var(--warn)' : 'var(--danger)';
+      const aminoPills = (item.aminoAcids || []).map(aa =>
+        `<span class="history-pill ${aa.status}" title="${aa.note || ''}">${aa.name}</span>`
+      ).join('');
+      const sugText = (item.suggestions || []).map(s => `${s.emoji} ${s.food}`).join(' · ');
+
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      el.innerHTML = `
+        <div class="history-item-top">
+          <div class="history-meal">${item.meal}</div>
+          <div class="history-score" style="color:${scoreColor}">${item.score}%</div>
+          <button class="history-delete" onclick="deleteHistoryItem(${item.id}, event)" title="Delete">×</button>
+        </div>
+        <div class="history-date">${item.date} · ${item.scoreLabel}</div>
+        <div class="history-amino-row">${aminoPills}</div>
+        ${sugText ? `<div class="history-suggestions">Add: ${sugText}</div>` : ''}
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-analyze').classList.toggle('active', tab === 'analyze');
+    document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+    document.getElementById('pane-analyze').style.display = tab === 'analyze' ? 'block' : 'none';
+    document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none';
+    if (tab === 'history') {
+      document.getElementById('history-search').value = '';
+      renderHistory();
+      // update search placeholder for lang
+      document.getElementById('history-search').placeholder = lang === 'ro' ? 'Caută mese sau ingrediente…' : 'Search meals or ingredients…';
+    }
+  }
+
+  // ── Patch renderResults to also save to history ───────────
+  const _origRenderResults = renderResults;
+  renderResults = function(data) {
+    _origRenderResults(data);
+    // get the meal description that was analyzed
+    const meal = mode === 'describe'
+      ? document.getElementById('meal-desc').value.trim()
+      : tags.join(', ');
+    addToHistory(meal, data);
+  };
+
+  init();
+
+</script>
+</body>
+</html>
